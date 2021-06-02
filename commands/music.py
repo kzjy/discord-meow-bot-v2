@@ -111,9 +111,12 @@ class Music(commands.Cog):
         if not ctx.message.author.voice:
             return await ctx.send("{} is not connected to a voice channel".format(ctx.message.author.name) + " **Nyaa~**")        
 
-        async with ctx.typing():
-            info = ytdl.extract_info(table.table[name]['url'], download=False)
-            URL = info['formats'][0]['url']
+        try:
+            async with ctx.typing():
+                info = ytdl.extract_info(table.table[name]['url'], download=False)
+                URL = info['formats'][0]['url']
+        except Exception:
+            return await ctx.send("The music video is no longer available." + " **Nyaa~**")
 
         voice_client = ctx.guild.voice_client
 
@@ -125,7 +128,7 @@ class Music(commands.Cog):
             voice_client.stop()
 
         voice_client.play(discord.FFmpegPCMAudio(URL, executable="./ffmpeg.exe", **FFMPEG_OPTIONS))
-        await ctx.send('**Now playing:** {}'.format(name) + " **Nyaa~**")
+        await ctx.send('**Now playing music:** {}'.format(name) + " **Nyaa~**")
         
 
     @commands.command(name='pause', help='This command pauses the song')

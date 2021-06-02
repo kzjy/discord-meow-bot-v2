@@ -24,7 +24,8 @@ class SoundEffectTable():
 
     def save_sound_effect_info(self):
         with open(self.file, 'w', encoding="utf-8") as f:
-            for name in self.table:
+            keys = sorted(self.table.keys())
+            for name in keys:
                 url = self.table.get(name, "")
                 f.write("{},{}\n".format(name, url))
     
@@ -39,6 +40,8 @@ class SoundEffectTable():
 
         try:
             data = ytdl.extract_info(url, download=False)
+            if data['duration'] > 30:
+                return False, "Sound effects should be < 30 seconds!"
             table.table[name] = url
             table.save_sound_effect_info()
         except Exception as e:
@@ -52,7 +55,7 @@ class SoundEffectTable():
         Remove name from sound_effect table, return true, msg on success false, err on fail
         """
         if name not in self.table:
-            return False, f"The name {name} does not exist in the sound_effect table"
+            return False, f"The name {name} does not exist in the sound effect table"
 
         self.table.pop(name)
         return True, f"{name} has been removed from the table"
@@ -76,8 +79,43 @@ class SoundEffectTable():
 class SoundEffect(commands.Cog):
 
     @commands.command(name='se', help='Play sound effect <name>')
-    async def play_sound_effect(self, ctx):
-        return await ctx.send(str(table) + "\n**Nyaa~**")
+    async def play_sound_effect(self, ctx, name):
+        url = table.get_url(name)
+        if url is None:
+            return await ctx.send(f"The name {name} does not exist in the music table" + " **Nyaa~**")
+
+        if not ctx.message.author.voice:
+            return await ctx.send(f"{ctx.message.author.name} is not connected to a voice channel" + " **Nyaa~**")   
+
+        try:
+            data = ytdl.extract_info(url, download=False)
+            if data['duration'] > 30:
+                return await ctx.send("Sound effects should be < 30 seconds!" + " **Nyaa~**")
+            URL = data['formats'][0]['url']
+        except Exception as e:
+            traceback.print_exc()
+            return await ctx.send("The sound effect is unavailable" + " **Nyaa~**")
+     
+        voice_client = ctx.guild.voice_client
+
+        if voice_client == None:
+            channel = ctx.message.author.voice.channel
+            voice_client = await channel.connect()
+        
+        if voice_client is not None:
+            current_audio_source = None
+            if voice_client.is_playing():
+                current_audio_source = voice_client.source
+                voice_client.pause()
+
+            def after(err):
+                if current_audio_source is not None:
+                    voice_client.play(current_audio_source)
+
+            new_audio_source = discord.FFmpegPCMAudio(URL, executable="./ffmpeg.exe", **FFMPEG_OPTIONS)
+            voice_client.play(new_audio_source, after=after)
+
+        return await ctx.send(f'Playing sound effect: {name}' + " **Nyaa~**")
     
     @commands.command(name='se-list', help='List all available sound effects')
     async def list_sound_effect(self, ctx):
@@ -92,7 +130,7 @@ class SoundEffect(commands.Cog):
 
     @commands.command(name='se-remove', help='Remove a sound effect <name>')
     async def remove_sound_effect(self, ctx, name):
-        success, msg = table.remove_music(name)
+        success, msg = table.remove_sound_effect(name)
         return await ctx.send(msg + " **Nyaa~**")
 
 table = SoundEffectTable('./sound_effect.txt')
