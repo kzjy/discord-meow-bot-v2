@@ -1,1 +1,0 @@
-1. fix bot not playing when already in a voice channel 

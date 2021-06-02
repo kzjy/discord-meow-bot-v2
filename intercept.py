@@ -1,5 +1,5 @@
 import discord
-from ytdl import ytdl
+from utils.ytdl import ytdl
 from music import FFMPEG_OPTIONS
 
 class Intercept():

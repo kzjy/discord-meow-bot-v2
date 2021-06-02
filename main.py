@@ -3,10 +3,10 @@ import discord
 import os
 import nacl.secret
 from discord_token import TOKEN
-from ytdl import ytdl
-from music import Music, FFMPEG_OPTIONS
-from misc import Misc
-from sound_effect import SoundEffect
+from utils.ytdl import ytdl
+from commands.music import Music, FFMPEG_OPTIONS
+from commands.misc import Misc
+from commands.sound_effect import SoundEffect
 from intercept import Intercept
 
 intents = discord.Intents().all()
