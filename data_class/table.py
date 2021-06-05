@@ -2,7 +2,7 @@ import os
 from ytdl_utils.ytdl import fetch_data
 from data_class.music import Music
 
-class MusicTable():
+class Table():
     def __init__(self, txt):
         self.table = {}
         self.file = txt
@@ -11,19 +11,50 @@ class MusicTable():
             f = open(self.file, 'w')
             f.close()
         
-        self.load_music_info()
+        self.load_table()
 
-    def load_music_info(self):
+    def load_table(self):
         with open(self.file, 'r', encoding="utf-8") as f:
             for line in f:
-                category, name, title, url = line.strip().split(",")
-                self.table[name] = Music(category, name, title, url)
+                category, name, title, url, duration = line.strip().split(",")
+                self.table[name] = Music(category, name, title, url, int(duration))
 
-    def save_music_info(self):
+    def save_table(self):
         with open(self.file, 'w', encoding="utf-8") as f:
             for name in self.table:
                 music = self.table[name]
-                f.write(f"{music.category},{music.name},{music.title},{music.url}\n")
+                f.write(f"{music.category},{music.name},{music.title},{music.url},{music.duration}\n")
+    
+    def get_url(self, name):
+        """
+        Return the url of vid by name
+        """
+        music = self.table.get(name, None)
+        if music is None:
+            return None
+        return music.url 
+    
+    def get_paginated_category(self):
+        music_by_category = {}
+
+        # Map music by category
+        for name in self.table:
+            category = self.table[name].category
+            if category not in music_by_category:
+                music_by_category[category] = []
+            
+            music_by_category[category].append(self.table[name])
+        
+        return music_by_category
+    
+    def get(self, name):
+        return self.table.get(name, None)
+
+
+class MusicTable(Table):
+
+    def __init__(self, txt):
+        super(MusicTable, self).__init__(txt)
     
 
     def add_music(self, category, name, url):
@@ -43,8 +74,8 @@ class MusicTable():
         
         
         # Add to table
-        self.table[name] = Music(category, name, data["title"], url)
-        self.save_music_info()
+        self.table[name] = Music(category, name, data["title"], url, int(data['duration']))
+        self.save_table()
         return True, f"{name}: {data['title']} has been added"
 
     def remove_music(self, name):
@@ -57,79 +88,18 @@ class MusicTable():
         self.table.pop(name)
         return True, f"{name} has been removed from the table"
     
-    def get_url(self, name):
-        """
-        Return the url of vid by name
-        """
-        music = self.table.get(name, None)
-        if music is None:
-            return None
-        return music.url 
-    
-    def get(self, name):
-        return self.table.get(name, None)
-    
-    def get_paginated_category(self):
-        music_by_category = {}
 
-        # Map music by category
-        for name in self.table:
-            category = self.table[name].category
-            if category not in music_by_category:
-                music_by_category[category] = []
-            
-            music_by_category[category].append(self.table[name])
-        
-        return music_by_category
-
-    def __repr__(self):
-        """
-        Repr of self
-        """
-        s = "Music Table: \n"
-        music_by_category = self.get_paginated_category()
-        
-        # Create String repr
-        for category in music_by_category:
-            s += f"==={category}===\n"
-            for music in music_by_category[category]:
-                s += f"    {music.name}: {music.title}\n"
-        
-        s += "\n"
-        return s
-
-
-class SoundEffectTable():
+class SoundEffectTable(Table):
 
     def __init__(self, txt):
-        self.table = {}
-        self.file = txt
-
-        if not os.path.exists(self.file):
-            f = open(self.file, 'w')
-            f.close()
-        
-        self.load_sound_effect_info()
-
-    def load_sound_effect_info(self):
-        with open(self.file, 'r', encoding="utf-8") as f:
-            for line in f:
-                name, url = line.strip().split(",")
-                self.table[name] = url
-
-    def save_sound_effect_info(self):
-        with open(self.file, 'w', encoding="utf-8") as f:
-            keys = sorted(self.table.keys())
-            for name in keys:
-                url = self.table.get(name, "")
-                f.write("{},{}\n".format(name, url))
+        super(SoundEffectTable, self).__init__(txt)
     
 
-    def add_sound_effect(self, name, url):
+    def add_sound_effect(self, category, name, url):
         """
         Add sound effect to table, return true, msg on success and false, error message on fail
         """
-        name, url = name.strip(), url.strip()
+        category, name, url = category.strip(), name.strip(), url.strip()
         if name in self.table:
             return False, f"The id {name} already exists in the table"
 
@@ -144,8 +114,8 @@ class SoundEffectTable():
             return False, "Sound effects should be < 30 seconds!"
 
         # Add to table
-        self.table[name] = url
-        self.save_sound_effect_info()
+        self.table[name] = Music(category, name, data["title"], url, int(data['duration']))
+        self.save_table()
         return True, f"Sound effect {name} has been added"
 
     def remove_sound_effect(self, name):
@@ -158,22 +128,6 @@ class SoundEffectTable():
         self.table.pop(name)
         return True, f"{name} has been removed from the table"
     
-    def get_url(self, name):
-        """
-        Return the url of vid by name
-        """
-        return self.table.get(name, None)
-    
-    def __repr__(self):
-        """
-        Repr of self
-        """
-        s = "Sound Effect Table: \n"
-        for name in self.table:
-            s += f"    {name}\n"
-            
-        s += "\n"
-        return s
 
 if __name__ == "__main__":
     t = SoundEffectTable('./sound_effect.txt')

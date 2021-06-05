@@ -1,6 +1,6 @@
 from discord.ext import commands
 import discord
-from ytdl_utils.ytdl import fetch_audio_source, ytdl, FFMPEG_OPTIONS
+from ytdl_utils.ytdl import fetch_audio_source
 
 class HiddenNyaa(commands.Cog):
 
@@ -12,28 +12,20 @@ class HiddenNyaa(commands.Cog):
             channel = discord.utils.get(guild.voice_channels, name="5 Step 1 Estranged Broders")
             voice_client = await channel.connect()
 
-        if voice_client is not None:
+        current_audio_source = None
+        if voice_client.is_playing():
             current_audio_source = voice_client.source
-            # if voice_client.is_playing():
-            #     current_audio_source = voice_client.source
-            #     voice_client.stop()
+        
+        if current_audio_source is not None:
+            ctx.bot.queue.insert(0, current_audio_source)
 
-            def after(err):
-                if current_audio_source is None:
-                    ctx.bot.play_next()
-                else:
-                    voice_client.play(current_audio_source, after=lambda err: ctx.bot.play_next())
-
-            
-            new_audio_source = fetch_audio_source(link)
-            if new_audio_source is not None:
-                voice_client.pause()
-                voice_client.play(new_audio_source, after=after)
+        new_audio_source = fetch_audio_source(link)
+        if new_audio_source is not None:
+            voice_client.source = new_audio_source
 
     @commands.command(name='rr', hidden=True)
     async def rr(self, ctx):
         await self.interrupt_play_link(ctx, "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-
 
     @commands.command(name="cb", hidden=True)
     async def cb(self, ctx):

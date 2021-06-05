@@ -1,7 +1,6 @@
 from discord.ext import commands
 from ytdl_utils.ytdl import fetch_audio_source, fetch_data
-from data_class.music import Music
-import discord
+
 
 class MusicNyaa(commands.Cog):
     
@@ -83,7 +82,7 @@ class MusicNyaa(commands.Cog):
         await channel.connect()
         return await ctx.send(ctx.bot.format_string(f"Connected to {channel}"))
 
-    @commands.command(name='leave', help='To make the bot leave the voice channel')
+    @commands.command(name='leave', help="Tells the bot to leave the voice channel")
     async def leave(self, ctx):
         voice_client = ctx.message.guild.voice_client
         if voice_client.is_connected():

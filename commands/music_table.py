@@ -10,13 +10,11 @@ class MusicTableNyaa(commands.Cog):
         for i, key in enumerate(category_dict):
             category, list_of_music = key, category_dict[key]
             embed = discord.Embed(color=ctx.author.color, title=f"Category: {category}", description=f"List of stored music under this category")
-            # embed.add_field(name="\u200b", value="\u200b")
             for music in list_of_music:
-                display_name = f"{music.name}: {music.title}"
-                # value = music.url
-                embed.add_field(name=music.title, value=music.name, inline=False)
-                embed.set_footer(text=f"Page {i + 1} of {num_categories}")
-            
+                minute, seconds = music.duration // 60, music.duration % 60
+                embed.add_field(name=music.title, value=f"Name: {music.name}  -  Length: {minute}:{seconds:02d}", inline=False)
+
+            embed.set_footer(text=f"Page {i + 1} of {num_categories}")
             list_of_embeds.append(embed)
         
         if num_categories == 0:
@@ -39,7 +37,7 @@ class MusicTableNyaa(commands.Cog):
         await message.add_reaction("▶️")
 
         def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in ["◀️", "▶️"]
+            return user == ctx.author and str(reaction.emoji) in ["◀️", "▶️"] and reaction.message.id == message.id
 
         while True:
             try:
@@ -60,9 +58,9 @@ class MusicTableNyaa(commands.Cog):
         
         return await message.clear_reactions()
 
-    @commands.command(name='table-add', help='Add <name> <category> <url> to music table')
-    async def add_music(self, ctx, name, category, url):
-        with ctx.typing():
+    @commands.command(name='table-add', help='Add <category> <name> <url> to music table')
+    async def add_music(self, ctx, category, name, url):
+        async with ctx.typing():
             success, msg = ctx.bot.music_table.add_music(category, name, url)
 
         return await ctx.send(ctx.bot.format_string(msg))

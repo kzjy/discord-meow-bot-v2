@@ -41,7 +41,7 @@ class CustomBot(commands.Bot):
                 if data is None:
                     return None
                 
-                music = Music(".", "temp", data["title"], url)
+                music = Music(".", "temp", data["title"], url, int(data['duration']))
                 return music
             
             # Get music object from table
@@ -54,7 +54,7 @@ class CustomBot(commands.Bot):
         data = ytdl.extract_info(f"ytsearch:{arg}", download=False)['entries'][0]
         if data is None:
             return None
-        music = Music(".", "temp", data['title'], data["webpage_url"])
+        music = Music(".", "temp", data['title'], data["webpage_url"], int(data['duration']))
 
         return music            
 

@@ -15,7 +15,8 @@ class QueueNyaa(commands.Cog):
             embed = discord.Embed(color=ctx.author.color, title="Currently Queued", description=f"List of currently queued music")
             for j in range(len(queue[i:last_index])):
                 music = queue[i * num_songs_per_page + j]
-                embed.add_field(name=f"{i * num_songs_per_page + j + 1} : {music.title}", value="\u200b", inline=False)
+                minute, seconds = music.duration // 60, music.duration % 60
+                embed.add_field(name=f"{i * num_songs_per_page + j + 1} : {music.title}", value=f"Length: {minute}:{seconds:02d}", inline=False)
                 embed.set_footer(text=f"Page {i//num_songs_per_page + 1} of {ceil(len(queue) /num_songs_per_page)}")
             
             list_of_embeds.append(embed)
@@ -29,7 +30,7 @@ class QueueNyaa(commands.Cog):
     async def add_queue(self, ctx):
 
         # Get music object from name or url
-        with ctx.typing():
+        async with ctx.typing():
             music = ctx.bot.parse_message_content(ctx.message.content)
 
         if music is not None:
@@ -55,8 +56,7 @@ class QueueNyaa(commands.Cog):
 
     @commands.command(name="queue", help="Check current queue")
     async def queue(self, ctx):
-        # s = ctx.bot.format_queue()
-        # return await ctx.send(ctx.bot.format_string(s))
+
         list_of_embeds = self.create_embed_list(ctx, list(ctx.bot.queue))
         
         current_page = 0
@@ -68,7 +68,7 @@ class QueueNyaa(commands.Cog):
         await message.add_reaction("▶️")
 
         def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in ["◀️", "▶️"]
+            return user == ctx.author and str(reaction.emoji) in ["◀️", "▶️"] and reaction.message.id == message.id
 
         while True:
             try:
@@ -84,7 +84,6 @@ class QueueNyaa(commands.Cog):
                 await message.remove_reaction(reaction, user)
 
             except TimeoutError:
-                
                 break
         
         return await message.clear_reactions()

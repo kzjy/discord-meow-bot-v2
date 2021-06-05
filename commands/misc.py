@@ -93,50 +93,6 @@ class MiscNyaa(commands.Cog):
             await ctx.send("https://i.kym-cdn.com/entries/icons/facebook/000/030/971/Screen_Shot_2019-08-29_at_2.44.51_PM.jpg")
             
     
-    # @commands.command(name="me", help="Visualization of me coding the bot")
-    # async def meirl(self, ctx):
-    #     await ctx.send("https://www.youtube.com/watch?v=31HfP81oWDI\n")
-    #     # return await ctx.send(ctx.bot.format_string("\n"))
-    
-
-    @commands.command(name="page", help="test123")
-    async def page(self, ctx):
-        embed1 = discord.Embed(color=ctx.author.color).add_field(name="Example", value="Page 1")
-        embed2 = discord.Embed(color=ctx.author.color).add_field(name="Example", value="Page 2")
-        embed3 = discord.Embed(color=ctx.author.color).add_field(name="Example", value="Page 3")
-        embeds = [embed1, embed2, embed3]
-        pages = len(embeds)
-        cur_page = 1
-        message = await ctx.send(embed=embeds[cur_page])
-
-        await message.add_reaction("◀️")
-        await message.add_reaction("▶️")
-
-        def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in ["◀️", "▶️"]
-            # This makes sure nobody except the command sender can interact with the "menu"
-
-        while True:
-            try:
-                reaction, user = await ctx.bot.wait_for("reaction_add", timeout=15, check=check)
-                # waiting for a reaction to be added - times out after x seconds, 60 in this
-                # example
-
-                if str(reaction.emoji) == "▶️" and cur_page != pages:
-                    cur_page += 1
-                    await message.edit(embed=embeds[cur_page - 1])
-                    await message.remove_reaction(reaction, user)
-
-                elif str(reaction.emoji) == "◀️" and cur_page > 1:
-                    cur_page -= 1
-                    await message.edit(embed=embeds[cur_page - 1])
-                    await message.remove_reaction(reaction, user)
-
-                else:
-                    await message.remove_reaction(reaction, user)
-                    # removes reactions if the user tries to go forward on the last page or
-                    # backwards on the first page
-            except asyncio.TimeoutError:
-                await message.delete()
-                break
-                # ending the loop if user doesn't react after x seconds
+    @commands.command(name="me", help="Visualization of me coding the bot")
+    async def meirl(self, ctx):
+        await ctx.send("https://www.youtube.com/watch?v=31HfP81oWDI\n")
