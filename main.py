@@ -1,35 +1,40 @@
-from discord.ext import commands
 import discord
-import os
-import nacl.secret
 from discord_token import TOKEN
-from utils.ytdl import ytdl
-from commands.music import Music, FFMPEG_OPTIONS
-from commands.misc import Misc
-from commands.sound_effect import SoundEffect
-from commands.hidden import Hidden
-from intercept import Intercept
+from commands.music import MusicNyaa
+from commands.misc import MiscNyaa
+from commands.queue import QueueNyaa
+from commands.music_table import MusicTableNyaa
+from commands.sound_effect import SoundEffectNyaa
+from commands.hidden import HiddenNyaa
+from custom_bot import CustomBot
+
+import traceback
 
 intents = discord.Intents().all()
 prefix = "~"
-bot = commands.Bot(command_prefix=prefix, intents=intents)
-bot.add_cog(Music())
-bot.add_cog(Misc())
-bot.add_cog(SoundEffect())
-bot.add_cog(Hidden())
 
+bot = CustomBot(command_prefix=prefix, intents=intents)
+bot.add_cog(MusicNyaa())
+bot.add_cog(MusicTableNyaa())
+bot.add_cog(QueueNyaa())
+bot.add_cog(MiscNyaa())
+bot.add_cog(SoundEffectNyaa())
+bot.add_cog(HiddenNyaa())
 
 @bot.event
 async def on_ready():
     print("Bot ready")
     guild = bot.get_guild(293883764382367744)
     channel = discord.utils.get(guild.text_channels, name="bot-commands")
+    await bot.change_presence(activity=discord.Game(name="depression"))
     await channel.send("Nyaa bot go **Nyaa~**")
 
 
 @bot.event
 async def on_command_error(ctx, err):
-    return await ctx.send(f"Dum dum, {err}" + " **Nyaa~**")
+    print(err)
+    traceback.print_exc()
+    return await ctx.send(bot.format_string(f"Dum dum, {err}"))
 
 
 if __name__ == "__main__" :

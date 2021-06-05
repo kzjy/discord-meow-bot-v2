@@ -1,136 +1,110 @@
 from discord.ext import commands
 import discord
-from utils.ytdl import ytdl, FFMPEG_OPTIONS
-import traceback
-import os
+from asyncio import TimeoutError
+from math import ceil
+from ytdl_utils.ytdl import fetch_data, fetch_audio_source
 
-class SoundEffectTable():
+class SoundEffectNyaa(commands.Cog):
 
-    def __init__(self, txt):
-        self.table = {}
-        self.file = txt
-
-        if not os.path.exists(self.file):
-            f = open(self.file, 'w')
-            f.close()
+    def create_embed_list(self, ctx, names):
+        num_se_per_page = 12
+        list_of_embeds = []
+        for i in range(0, len(names), num_se_per_page):
+            last_index = min(i + num_se_per_page, len(names))
+            embed = discord.Embed(color=ctx.author.color, title="Sound Effects", description=f"List of stored sound effects")
+            for name in names[i:last_index]:
+                embed.add_field(name=name, value="\u200b", inline=True)
+                embed.set_footer(text=f"Page {i//num_se_per_page + 1} of {ceil(len(names) /num_se_per_page)}")
+            
+            list_of_embeds.append(embed)
         
-        self.load_sound_effect_info()
-
-    def load_sound_effect_info(self):
-        with open(self.file, 'r', encoding="utf-8") as f:
-            for line in f:
-                name, url = line.strip().split(",")
-                self.table[name] = url
-
-    def save_sound_effect_info(self):
-        with open(self.file, 'w', encoding="utf-8") as f:
-            keys = sorted(self.table.keys())
-            for name in keys:
-                url = self.table.get(name, "")
-                f.write("{},{}\n".format(name, url))
-    
-
-    def add_sound_effect(self, name, url):
-        """
-        Add sound effect to table, return true, msg on success and false, error message on fail
-        """
-        name, url = name.strip(),  url.strip()
-        if name in self.table:
-            return False, f"The id {name} already exists in the table"
-
-        try:
-            data = ytdl.extract_info(url, download=False)
-            if data['duration'] > 30:
-                return False, "Sound effects should be < 30 seconds!"
-            table.table[name] = url
-            table.save_sound_effect_info()
-        except Exception as e:
-            traceback.print_exc()
-            return False, "The sound effect is unavailable"
-
-        return True, f"Sound effect {name} has been added"
-
-    def remove_sound_effect(self, name):
-        """
-        Remove name from sound_effect table, return true, msg on success false, err on fail
-        """
-        if name not in self.table:
-            return False, f"The name {name} does not exist in the sound effect table"
-
-        self.table.pop(name)
-        return True, f"{name} has been removed from the table"
-    
-    def get_url(self, name):
-        """
-        Return the url of vid by name
-        """
-        return self.table.get(name, None)
-
-    def __repr__(self):
-        """
-        Repr of self
-        """
-        s = "Sound Effect Table: \n"
-        for name in self.table:
-            s += f"    {name}\n"
+        if len(names) == 0:
+            list_of_embeds.append(discord.Embed(color=ctx.author.color, title="Sound Effects", description=f"List of stored sound effects"))
         
-        return s
+        return list_of_embeds
 
-class SoundEffect(commands.Cog):
 
     @commands.command(name='se', help='Play sound effect <name>')
     async def play_sound_effect(self, ctx, name):
-        url = table.get_url(name)
+        url = ctx.bot.se_table.get_url(name)
+
         if url is None:
-            return await ctx.send(f"The name {name} does not exist in the music table" + " **Nyaa~**")
+            return await ctx.send(ctx.bot.format_string(f"The name {name} does not exist in the music table"))
 
         if not ctx.message.author.voice:
-            return await ctx.send(f"{ctx.message.author.name} is not connected to a voice channel" + " **Nyaa~**")   
+            return await ctx.send(ctx.bot.format_string(f"{ctx.message.author.name} is not connected to a voice channel"))   
 
-        try:
-            data = ytdl.extract_info(url, download=False)
-            if data['duration'] > 30:
-                return await ctx.send("Sound effects should be < 30 seconds!" + " **Nyaa~**")
-            URL = data['formats'][0]['url']
-        except Exception as e:
-            traceback.print_exc()
-            return await ctx.send("The sound effect is unavailable" + " **Nyaa~**")
-     
-        voice_client = ctx.guild.voice_client
+        data = fetch_data(url)
+        if data is None:
+            return await ctx.send(ctx.bot.format_string("The sound effect is unavailable"))
 
-        if voice_client == None:
-            channel = ctx.message.author.voice.channel
-            voice_client = await channel.connect()
+        if data['duration'] > 30:
+            return await ctx.send(ctx.bot.format_string("Sound effects should be < 30 seconds!"))
         
-        if voice_client is not None:
-            current_audio_source = None
-            if voice_client.is_playing():
-                current_audio_source = voice_client.source
-                voice_client.pause()
+        voice_client = ctx.guild.voice_client
+        
+        current_audio_source = None
+        was_playing = voice_client.is_playing()
+        if voice_client.is_playing():
+            current_audio_source = voice_client.source
+            voice_client.pause()
+        
+        if current_audio_source is not None:
+            ctx.bot.queue.insert(0, current_audio_source)
 
-            def after(err):
-                if current_audio_source is not None:
-                    voice_client.play(current_audio_source)
+        new_audio_source = fetch_audio_source(url)
+        if new_audio_source is not None:
+            ctx.bot.queue.insert(0, new_audio_source)
 
-            new_audio_source = discord.FFmpegPCMAudio(URL, executable="./ffmpeg.exe", **FFMPEG_OPTIONS)
-            voice_client.play(new_audio_source, after=after)
+        await ctx.send(ctx.bot.format_string(f'Playing sound effect: {name}'))
 
-        return await ctx.send(f'Playing sound effect: {name}' + " **Nyaa~**")
+        if was_playing:
+            voice_client.stop()
+        else:
+            ctx.bot.play_next()
     
     @commands.command(name='se-list', help='List all available sound effects')
     async def list_sound_effect(self, ctx):
-        return await ctx.send(str(table) + "\n**Nyaa~**")
+
+        list_of_embeds = self.create_embed_list(ctx, list(ctx.bot.se_table.table.keys()))
+        
+        current_page = 0
+        num_pages = len(list_of_embeds)
+
+        message = await ctx.send(embed=list_of_embeds[current_page])
+
+        await message.add_reaction("◀️")
+        await message.add_reaction("▶️")
+
+        def check(reaction, user):
+            return user == ctx.author and str(reaction.emoji) in ["◀️", "▶️"]
+
+        while True:
+            try:
+                reaction, user = await ctx.bot.wait_for("reaction_add", timeout=15, check=check)
+
+                if str(reaction.emoji) == "▶️" and current_page < num_pages - 1:
+                    current_page += 1
+                    
+                elif str(reaction.emoji) == "◀️" and current_page > 0:
+                    current_page -= 1     
+
+                await message.edit(embed=list_of_embeds[current_page])
+                await message.remove_reaction(reaction, user)
+
+            except TimeoutError:
+                break
+        
+        return await message.clear_reactions()
 
     @commands.command(name='se-add', help='Add a sound effect <name> <link>')
     async def add_sound_effect(self, ctx, name, url):
-        async with ctx.typing():
-            success, msg = table.add_sound_effect(name, url)
+        with ctx.typing():
+            success, msg = ctx.bot.se_table.add_sound_effect(name, url)
 
-        return await ctx.send(msg + " **Nyaa~**")
+        return await ctx.send(ctx.bot.format_string(msg))
 
     @commands.command(name='se-remove', help='Remove a sound effect <name>')
     async def remove_sound_effect(self, ctx, name):
-        success, msg = table.remove_sound_effect(name)
-        return await ctx.send(msg + " **Nyaa~**")
-
-table = SoundEffectTable('./sound_effect.txt')
+        success, msg = ctx.bot.se_table.remove_sound_effect(name)
+        return await ctx.send(ctx.bot.format_string(msg))

@@ -1,6 +1,7 @@
 20thcentury,https://www.youtube.com/watch?v=VtZx6AppJ5M
 awkwardsilence,https://www.youtube.com/watch?v=CpGtBnVZLSk
 bruh,https://www.youtube.com/watch?v=D2_r4q2imnQ
+clap,https://www.youtube.com/watch?v=Xm_TXfiCGqo
 damnson,https://www.youtube.com/watch?v=z8RkR4rd7dM
 depression,https://www.youtube.com/watch?v=lra8LLKL8bo
 dn,https://www.youtube.com/watch?v=66I78hXXwvk
@@ -24,6 +25,7 @@ rightinthepussy,https://www.youtube.com/watch?v=CgSNA4xtlBU
 sadairhorn,https://www.youtube.com/watch?v=BfyXK4KwyYA
 sadtrombone,https://www.youtube.com/watch?v=CQeezCdF4mk
 scream,https://www.youtube.com/watch?v=X78GyIfrSV4
+silence,https://www.youtube.com/watch?v=CpGtBnVZLSk
 skrra,https://www.youtube.com/watch?v=okuTl9MGxgI
 smokeweed,https://www.youtube.com/watch?v=2fbNyyrPrco
 tada,https://www.youtube.com/watch?v=jLtbFWJm9_M

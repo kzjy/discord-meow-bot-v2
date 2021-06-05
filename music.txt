@@ -1,2 +1,6 @@
 izone,panorama,IZ*ONE (아이즈원) 'Panorama' MV,https://www.youtube.com/watch?v=G8GaQdW2wHc
 izone,lavieenrose,IZ*ONE (아이즈원) - 라비앙로즈 (La Vie en Rose) MV,https://www.youtube.com/watch?v=WZwr2a_lFWY
+doit,.,Just do it(short),https://www.youtube.com/watch?v=Hhwms1gbk-Q
+izone,panorama2,IZ*ONE (아이즈원) 'Panorama' MV,https://www.youtube.com/watch?v=G8GaQdW2wHc
+izone,lavieenrose2,IZ*ONE (아이즈원) - 라비앙로즈 (La Vie en Rose) MV,https://www.youtube.com/watch?v=WZwr2a_lFWY
+doit,.2,Just do it(short),https://www.youtube.com/watch?v=Hhwms1gbk-Q
