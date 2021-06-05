@@ -55,8 +55,10 @@ class MusicTableNyaa(commands.Cog):
                 await message.remove_reaction(reaction, user)
 
             except TimeoutError:
-                await message.clear_reactions()
+                
                 break
+        
+        return await message.clear_reactions()
 
     @commands.command(name='table-add', help='Add <name> <category> <url> to music table')
     async def add_music(self, ctx, name, category, url):

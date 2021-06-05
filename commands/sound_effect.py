@@ -3,6 +3,7 @@ import discord
 from asyncio import TimeoutError
 from math import ceil
 from ytdl_utils.ytdl import fetch_data, fetch_audio_source
+from copy import deepcopy
 
 class SoundEffectNyaa(commands.Cog):
 
@@ -42,9 +43,14 @@ class SoundEffectNyaa(commands.Cog):
             return await ctx.send(ctx.bot.format_string("Sound effects should be < 30 seconds!"))
         
         voice_client = ctx.guild.voice_client
+
+        if voice_client == None:
+            channel = ctx.message.author.voice.channel
+            voice_client = await channel.connect()
         
         current_audio_source = None
         was_playing = voice_client.is_playing()
+
         if voice_client.is_playing():
             current_audio_source = voice_client.source
             voice_client.pause()
@@ -53,14 +59,15 @@ class SoundEffectNyaa(commands.Cog):
             ctx.bot.queue.insert(0, current_audio_source)
 
         new_audio_source = fetch_audio_source(url)
-        if new_audio_source is not None:
-            ctx.bot.queue.insert(0, new_audio_source)
+  
+        msg = ctx.bot.format_string(f'Playing sound effect: {name}')
+        msg = await ctx.send(msg)
 
-        await ctx.send(ctx.bot.format_string(f'Playing sound effect: {name}'))
 
         if was_playing:
-            voice_client.stop()
+            voice_client.source = new_audio_source
         else:
+            ctx.bot.queue.insert(0, new_audio_source)
             ctx.bot.play_next()
     
     @commands.command(name='se-list', help='List all available sound effects')

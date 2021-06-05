@@ -18,27 +18,34 @@ class MusicNyaa(commands.Cog):
 
         
         msg = ctx.message.content.strip().split(" ")
+
+        # Get voice client
+        voice_client = ctx.guild.voice_client
+        if voice_client == None:
+            channel = ctx.message.author.voice.channel
+            voice_client = await channel.connect()
+        
         if len(msg) > 1: # Some argument given, get music from 
-            with ctx.typing():
+            async with ctx.typing():
                 music = ctx.bot.parse_message_content(ctx.message.content)
             audio_source = fetch_audio_source(music.url)
 
             if audio_source is None:
                 return await ctx.send(ctx.bot.format_string(f"The video is no longer available."))
             
-            ctx.bot.queue.insert(0, audio_source)
-            await ctx.send(ctx.bot.format_string(f"**Playing: {music.title}"))
+            await ctx.send(ctx.bot.format_string(f"**Playing**: {music.title}"))
+        
+            if voice_client.is_playing():
+                voice_client.source = audio_source
+            else:
+                ctx.bot.queue.insert(0, audio_source)
+                ctx.bot.play_next()
 
-        # Play from queue
-        voice_client = ctx.guild.voice_client
-        if voice_client == None:
-            channel = ctx.message.author.voice.channel
-            voice_client = await channel.connect()
-
-        if voice_client.is_playing():
-            voice_client.stop()
-        else:
-            ctx.bot.play_next()
+        else: # Play something from queue
+            if voice_client.is_playing():
+                voice_client.stop()
+            else:
+                ctx.bot.play_next()
             
     @commands.command(name='pause', help='Pause current music')
     async def pause(self, ctx):

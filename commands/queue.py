@@ -84,5 +84,7 @@ class QueueNyaa(commands.Cog):
                 await message.remove_reaction(reaction, user)
 
             except TimeoutError:
-                await message.clear_reactions()
+                
                 break
+        
+        return await message.clear_reactions()
